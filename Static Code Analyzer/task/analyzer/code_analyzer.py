@@ -3,13 +3,14 @@ Module's docstring.
 """
 
 import os
+import sys
 
-LONG = "Line {}: S001 Too long"
-INDENTATION = "Line {}: S002 Indentation is not a multiple of four"
-SEMICOLON = "Line {}: S003 Unnecessary semicolon"
-BLANK_LINES = "Line {}: S006 More than two blank lines used before this line"
-TODO = "Line {}: S005 TODO found"
-SPACES = "Line {}: S004 At least two spaces required before inline comments"
+LONG = ": Line {}: S001 Too long"
+INDENTATION = ": Line {}: S002 Indentation is not a multiple of four"
+SEMICOLON = ": Line {}: S003 Unnecessary semicolon"
+BLANK_LINES = ": Line {}: S006 More than two blank lines used before this line"
+TODO = ": Line {}: S005 TODO found"
+SPACES = ": Line {}: S004 At least two spaces required before inline comments"
 
 def too_long(line):
     '''Check if line is longer than 79 chars'''
@@ -71,33 +72,26 @@ def unnecessary_semicolon(line):
     return False
 
 
-def check(line, index):
+def check(line, index, filename):
     ''''run all the checks on current line'''
 
     errors = []
 
     if too_long(line):
-        errors.append(LONG.format(index))
+        errors.append(filename + LONG.format(index))
     if bad_indentation(line):
-        errors.append(INDENTATION.format(index))
+        errors.append(filename + INDENTATION.format(index))
     if unnecessary_semicolon(line):
-        errors.append(SEMICOLON.format(index))
+        errors.append(filename + SEMICOLON.format(index))
     if missing_spaces(line):
-        errors.append(SPACES.format(index))
+        errors.append(filename + SPACES.format(index))
     if todo_found(line):
-        errors.append(TODO.format(index))
+        errors.append(filename + TODO.format(index))
 
     return errors
 
 
-def main():
-    '''Main function of the programm'''
-    filename = input()
-    if os.path.exists("logfile.txt"):
-        os.remove("logfile.txt")
-    if os.path.exists("output.txt"):
-        os.remove("output.txt")
-
+def check_file(filename):
 
     log = open("logfile.txt", "a", encoding="utf-8")
     output = open("output.txt", "a", encoding="utf-8")
@@ -105,10 +99,10 @@ def main():
         empty_lines = 0
         for index, line in enumerate(file, start=1):
             log.write(line)
-            errors = check(line, index)
+            errors = check(line, index, filename)
             if not blank(line):
                 if empty_lines > 2:
-                    errors.append(BLANK_LINES.format(index))
+                    errors.append(filename + BLANK_LINES.format(index))
                 empty_lines = 0
             else:
                 empty_lines += 1
@@ -119,6 +113,26 @@ def main():
 
     output.close()
     log.close()
+
+
+
+def main():
+    '''Main function of the programm'''
+
+    if os.path.exists("logfile.txt"):
+        os.remove("logfile.txt")
+    if os.path.exists("output.txt"):
+        os.remove("output.txt")
+
+    filename = sys.argv[1]
+    if os.path.isfile(filename):
+        check_file(filename)
+    elif os.path.isdir(filename):
+
+        pass# print("filename:", filename)
+
+
+
 
 if __name__ == "__main__":
     main()
