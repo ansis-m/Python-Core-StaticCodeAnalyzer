@@ -92,9 +92,12 @@ def check(line, index, filename):
 
 
 def check_file(filename):
-
+    '''Manager-Function to check each file. All input and output is logged in logfile.txt and output.txt'''
     log = open("logfile.txt", "a", encoding="utf-8")
     output = open("output.txt", "a", encoding="utf-8")
+
+    output.write("*************************************\n")
+    log.write("*************************************\n")
     with open(filename, "r", encoding="utf-8") as file:
         empty_lines = 0
         for index, line in enumerate(file, start=1):
@@ -124,14 +127,14 @@ def main():
     if os.path.exists("output.txt"):
         os.remove("output.txt")
 
-    filename = sys.argv[1]
-    if os.path.isfile(filename):
-        check_file(filename)
-    elif os.path.isdir(filename):
-
-        pass# print("filename:", filename)
-
-
+    if os.path.isfile(sys.argv[1]):
+        check_file(sys.argv[1])
+    elif os.path.isdir(sys.argv[1]):
+        contents = os.listdir(sys.argv[1])
+        contents.sort()
+        for file in contents:
+            if file.endswith(".py"):
+                check_file(sys.argv[1] + "\\" + file)
 
 
 if __name__ == "__main__":
