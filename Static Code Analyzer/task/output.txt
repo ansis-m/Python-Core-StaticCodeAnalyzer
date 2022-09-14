@@ -1,0 +1,9 @@
+Line 1: S004 At least two spaces required before inline comments
+Line 2: S003 Unnecessary semicolon
+Line 3: S001 Too long
+Line 3: S003 Unnecessary semicolon
+Line 6: S001 Too long
+Line 11: S006 More than two blank lines used before this line
+Line 13: S003 Unnecessary semicolon
+Line 13: S004 At least two spaces required before inline comments
+Line 13: S005 TODO found
