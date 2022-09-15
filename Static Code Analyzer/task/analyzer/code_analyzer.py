@@ -5,6 +5,7 @@ Module's docstring.
 import os
 import sys
 import re
+import ast
 
 S001 = ": Line {}: S001 Too long"
 S002 = ": Line {}: S002 Indentation is not a multiple of four"
@@ -15,6 +16,9 @@ S006 = ": Line {}: S006 More than two blank lines used before this line"
 S007 = ": Line {}: S007 Too many spaces after construction_name (def or class)"
 S008 = ": Line {}: S008 Class name class_name should be written in CamelCase"
 S009 = ": Line {}: S009 Function name function_name should be written in snake_case"
+S010 = ": Line {}: S010 Argument name arg_name should be written in snake_case"
+S011 = ": Line {}: S011 Variable var_name should be written in snake_case"
+S012 = ": Line {}: S012 The default argument value is mutable"
 
 
 def too_long(line):
@@ -78,7 +82,7 @@ def unnecessary_semicolon(line):
 
 
 def many_spaces_after_construction_name(line):
-
+    ''''make sure just one space after the constructor'''
     temp = line.strip()
 
     if re.match('class ', temp) and re.match('class  ', temp):
@@ -90,6 +94,7 @@ def many_spaces_after_construction_name(line):
 
 
 def bad_class_name(line):
+    ''''make sure class name is camel case'''
 
     temp = line.strip()
     if re.match('class ', temp):
@@ -101,6 +106,7 @@ def bad_class_name(line):
 
 
 def bad_function_name(line):
+    ''''make sure function name is snake case'''
     temp = line.strip()
     if re.match('def ', temp):
         function_name = re.split("\(", temp[3::].strip())[0]
@@ -141,28 +147,58 @@ def check_file(filename):
     '''Manager-Function to check each file. All input and output is logged in logfile.txt and output.txt'''
     log = open("logfile.txt", "a", encoding="utf-8")
     output = open("output.txt", "a", encoding="utf-8")
+    ast_log = open("ast.txt", "a", encoding="utf-8")
 
     output.write("*************************************\n")
     log.write("*************************************\n")
+    errors = []
     with open(filename, "r", encoding="utf-8") as file:
         empty_lines = 0
         for index, line in enumerate(file, start=1):
             log.write("{}: ".format(index) + line)
-            errors = check(line, index, filename)
+            errors += check(line, index, filename)
             if not blank(line):
                 if empty_lines > 2:
                     errors.append(filename + S006.format(index))
                 empty_lines = 0
             else:
                 empty_lines += 1
-            errors.sort()
-            for error in errors:
-                output.write(error + "\n")
-                print(error)
+
+
+        # AST MODULE BEGIN
+        file.seek(0)
+        tree = ast.parse(file.read())
+        nodes = ast.walk(tree)
+        ast_log.write("***********************FILE***********************\n")
+        for indx, node in enumerate(nodes, start=1):
+            ast_log.write(f"node no {indx}: ")
+            ast_log.write(f"dump {node}\n")
+            if not isinstance(node, ast.Module):
+                # ast_log.write("_________________node_________________\n")
+                # ast_log.write("node.lineno: {}\n".format(node.lineno))
+                # ast_log.write("node.col_offset: {}\n".format(node.col_offset))
+                # ast_log.write("isinstance(node, ast.FunctionDef): {}\n".format(isinstance(node, ast.FunctionDef)))
+                # ast_log.write("isinstance(node, ast.Name): {}\n".format(isinstance(node, ast.Name)))
+                if isinstance(node, ast.FunctionDef):
+                    args = [a.arg for a in node.args.args]
+                    ast_log.write("\n\t....function args....\n")
+                    for arg in args:
+                        ast_log.write(f"\t{arg}\n")
+                    ast_log.write("\n\t....function args end....\n")
+
+
+
+
+
+        # AST MODULE END
+        #errors.sort()
+        for error in errors:
+            output.write(error + "\n")
+            print(error)
 
     output.close()
     log.close()
-
+    ast_log.close()
 
 
 def main():
@@ -172,6 +208,8 @@ def main():
         os.remove("logfile.txt")
     if os.path.exists("output.txt"):
         os.remove("output.txt")
+    if os.path.exists("ast.txt"):
+        os.remove("ast.txt")
 
     if os.path.isfile(sys.argv[1]):
         check_file(sys.argv[1])
