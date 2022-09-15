@@ -153,6 +153,8 @@ def check_file(filename):
     output = open("output.txt", "a", encoding="utf-8")
     ast_log = open("ast.txt", "a", encoding="utf-8")
 
+
+    bad_variables = set()
     output.write("*************************************\n")
     log.write("*************************************\n")
     errors = []
@@ -179,11 +181,13 @@ def check_file(filename):
             ast_log.write(f"dump {node}\n")
             if isinstance(node, ast.Name):
                 pass
-                # ast_log.write("_________________node_________________\n")
-                # ast_log.write("node.lineno: {}\n".format(node.lineno))
-                # ast_log.write("node.col_offset: {}\n".format(node.col_offset))
-                # ast_log.write("isinstance(node, ast.FunctionDef): {}\n".format(isinstance(node, ast.FunctionDef)))
-                # ast_log.write("isinstance(node, ast.Name): {}\n".format(isinstance(node, ast.Name)))
+                ast_log.write("\n\t....variable line number and function name....\n")
+                ast_log.write(f"\t{node.lineno}\n")
+                ast_log.write(f"\t{node.id}\n")
+                if not snake_case(node.id) and node.id not in bad_variables:
+                    errors.append(filename + S011.format(node.lineno))
+                    bad_variables.add(node.id)
+                ast_log.write("\n\t....end variable line number....\n")
             elif isinstance(node, ast.FunctionDef):
                 ast_log.write("\n\t....function line number and function name....\n")
                 ast_log.write(f"\t{node.lineno}\n")
