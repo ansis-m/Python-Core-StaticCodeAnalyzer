@@ -103,7 +103,7 @@ def bad_class_name(line):
 def bad_function_name(line):
     temp = line.strip()
     if re.match('def ', temp):
-        function_name = re.split("\(", temp[5::].strip())[0]
+        function_name = re.split("\(", temp[3::].strip())[0]
         function_name = function_name.strip("__")
 
         if not re.match("^[a-z][a-z0-9]+(_[a-z][a-z0-9]+)*$", function_name):
