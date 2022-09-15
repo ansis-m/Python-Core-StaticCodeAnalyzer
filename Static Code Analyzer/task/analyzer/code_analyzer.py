@@ -5,12 +5,16 @@ Module's docstring.
 import os
 import sys
 
-LONG = ": Line {}: S001 Too long"
-INDENTATION = ": Line {}: S002 Indentation is not a multiple of four"
-SEMICOLON = ": Line {}: S003 Unnecessary semicolon"
-BLANK_LINES = ": Line {}: S006 More than two blank lines used before this line"
-TODO = ": Line {}: S005 TODO found"
-SPACES = ": Line {}: S004 At least two spaces required before inline comments"
+S001 = ": Line {}: S001 Too long"
+S002 = ": Line {}: S002 Indentation is not a multiple of four"
+S003 = ": Line {}: S003 Unnecessary semicolon"
+S004 = ": Line {}: S004 At least two spaces required before inline comments"
+S005 = ": Line {}: S005 TODO found"
+S006 = ": Line {}: S006 More than two blank lines used before this line"
+S007 = ": Line {}: S007 Too many spaces after construction_name (def or class)"
+S008 = ": Line {}: S008 Class name class_name should be written in CamelCase"
+S009 = ": Line {}: S009 Function name function_name should be written in snake_case"
+
 
 def too_long(line):
     '''Check if line is longer than 79 chars'''
@@ -72,21 +76,39 @@ def unnecessary_semicolon(line):
     return False
 
 
+def many_spaces_after_construction_name(line):
+    return False
+
+
+def bad_class_name(line):
+    return False
+
+
+def bad_function_name(line):
+    return False
+
+
 def check(line, index, filename):
     ''''run all the checks on current line'''
 
     errors = []
 
     if too_long(line):
-        errors.append(filename + LONG.format(index))
+        errors.append(filename + S001.format(index))
     if bad_indentation(line):
-        errors.append(filename + INDENTATION.format(index))
+        errors.append(filename + S002.format(index))
     if unnecessary_semicolon(line):
-        errors.append(filename + SEMICOLON.format(index))
+        errors.append(filename + S003.format(index))
     if missing_spaces(line):
-        errors.append(filename + SPACES.format(index))
+        errors.append(filename + S004.format(index))
     if todo_found(line):
-        errors.append(filename + TODO.format(index))
+        errors.append(filename + S005.format(index))
+    if many_spaces_after_construction_name(line):
+        errors.append(filename + S007.format(index))
+    if bad_class_name(line):
+        errors.append(filename + S008.format(index))
+    if bad_function_name(line):
+        errors.append(filename + S009.format(index))
 
     return errors
 
@@ -105,7 +127,7 @@ def check_file(filename):
             errors = check(line, index, filename)
             if not blank(line):
                 if empty_lines > 2:
-                    errors.append(filename + BLANK_LINES.format(index))
+                    errors.append(filename + S006.format(index))
                 empty_lines = 0
             else:
                 empty_lines += 1
