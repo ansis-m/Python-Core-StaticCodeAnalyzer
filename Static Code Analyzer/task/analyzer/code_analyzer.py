@@ -146,22 +146,40 @@ def check(line, index, filename):
 
     return errors
 
+def ast_module(file, filename):
+
+    errors = []
+    bad_variables = set()
+    tree = ast.parse(file.read())
+    nodes = ast.walk(tree)
+
+    for node in nodes:
+        if isinstance(node, ast.Name):
+            if not snake_case(node.id) and node.id not in bad_variables:
+                errors.append(filename + S011.format(node.lineno))
+                bad_variables.add(node.id)
+        elif isinstance(node, ast.FunctionDef):
+            args = [a.arg for a in node.args.args]
+            for arg in args:
+                if not snake_case(arg):
+                    errors.append(filename + S010.format(node.lineno))
+                    break
+            defaults = [d for d in node.args.defaults]
+            for d in defaults:
+                if isinstance(d, ast.List):
+                    errors.append(filename + S012.format(node.lineno))
+                    break
+
+    return errors
+
+
 
 def check_file(filename):
     '''Manager-Function to check each file. All input and output is logged in logfile.txt and output.txt'''
-    log = open("logfile.txt", "a", encoding="utf-8")
-    output = open("output.txt", "a", encoding="utf-8")
-    ast_log = open("ast.txt", "a", encoding="utf-8")
-
-
-    bad_variables = set()
-    output.write("*************************************\n")
-    log.write("*************************************\n")
     errors = []
     with open(filename, "r", encoding="utf-8") as file:
         empty_lines = 0
         for index, line in enumerate(file, start=1):
-            log.write("{}: ".format(index) + line)
             errors += check(line, index, filename)
             if not blank(line):
                 if empty_lines > 2:
@@ -170,67 +188,15 @@ def check_file(filename):
             else:
                 empty_lines += 1
 
-
-        # AST MODULE BEGIN
         file.seek(0)
-        tree = ast.parse(file.read())
-        nodes = ast.walk(tree)
-        ast_log.write("***********************FILE***********************\n")
-        for indx, node in enumerate(nodes, start=1):
-            ast_log.write(f"node no {indx}: ")
-            ast_log.write(f"dump {node}\n")
-            if isinstance(node, ast.Name):
-                pass
-                ast_log.write("\n\t....variable line number and function name....\n")
-                ast_log.write(f"\t{node.lineno}\n")
-                ast_log.write(f"\t{node.id}\n")
-                if not snake_case(node.id) and node.id not in bad_variables:
-                    errors.append(filename + S011.format(node.lineno))
-                    bad_variables.add(node.id)
-                ast_log.write("\n\t....end variable line number....\n")
-            elif isinstance(node, ast.FunctionDef):
-                ast_log.write("\n\t....function line number and function name....\n")
-                ast_log.write(f"\t{node.lineno}\n")
-                ast_log.write(f"\t{node.name}\n")
-                ast_log.write("\n\t....end function line number....\n")
-                args = [a.arg for a in node.args.args]
-                ast_log.write("\n\t....function args until the first wrong....\n")
-                for arg in args:
-                    ast_log.write(f"\t{arg}\n")
-                    if not snake_case(arg):
-                        ast_log.write(f"\n\nbad arg!!! {arg}\n\n")
-                        errors.append(filename + S010.format(node.lineno))
-                        break
-                defaults = [d for d in node.args.defaults]
-                for d in defaults:
-                    ast_log.write(f"\n\t....default = {d}....\n")
-                    if isinstance(d, ast.List):
-                        errors.append(filename + S012.format(node.lineno))
-                        break
+        errors += ast_module(file, filename)
 
-                ast_log.write("\n\t....function args end....\n")
-
-        # AST MODULE END
-        #errors.sort()
         for error in errors:
-            output.write(error + "\n")
             print(error)
-
-    output.close()
-    log.close()
-    ast_log.close()
 
 
 def main():
     '''Main function of the programm'''
-
-    if os.path.exists("logfile.txt"):
-        os.remove("logfile.txt")
-    if os.path.exists("output.txt"):
-        os.remove("output.txt")
-    if os.path.exists("ast.txt"):
-        os.remove("ast.txt")
-
     if os.path.isfile(sys.argv[1]):
         check_file(sys.argv[1])
     elif os.path.isdir(sys.argv[1]):
