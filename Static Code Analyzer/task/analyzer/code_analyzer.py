@@ -4,6 +4,7 @@ Module's docstring.
 
 import os
 import sys
+import re
 
 S001 = ": Line {}: S001 Too long"
 S002 = ": Line {}: S002 Indentation is not a multiple of four"
@@ -77,10 +78,24 @@ def unnecessary_semicolon(line):
 
 
 def many_spaces_after_construction_name(line):
-    return False
+
+    temp = line.strip()
+
+    match_object = re.match('class ', temp)
+    if re.match(match_object) and re.match('class  ', temp):
+        return True
+    else:
+        return False
 
 
 def bad_class_name(line):
+
+    temp = line.strip()
+    if re.match('class ', temp):
+        class_name = re.split(":", temp[5::].strip())[0]
+        if not re.match("^([A-Z][a-z0-9]+)+$", class_name):
+            return True
+
     return False
 
 
