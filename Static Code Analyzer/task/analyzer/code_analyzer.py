@@ -104,6 +104,10 @@ def bad_class_name(line):
 
     return False
 
+def snake_case(name):
+    ''''make sure arg_name is snake case'''
+    return re.match("^[a-z][a-z0-9]*(_[a-z][a-z0-9]+)*$", name)
+
 
 def bad_function_name(line):
     ''''make sure function name is snake case'''
@@ -173,22 +177,34 @@ def check_file(filename):
         for indx, node in enumerate(nodes, start=1):
             ast_log.write(f"node no {indx}: ")
             ast_log.write(f"dump {node}\n")
-            if not isinstance(node, ast.Module):
+            if isinstance(node, ast.Name):
+                pass
                 # ast_log.write("_________________node_________________\n")
                 # ast_log.write("node.lineno: {}\n".format(node.lineno))
                 # ast_log.write("node.col_offset: {}\n".format(node.col_offset))
                 # ast_log.write("isinstance(node, ast.FunctionDef): {}\n".format(isinstance(node, ast.FunctionDef)))
                 # ast_log.write("isinstance(node, ast.Name): {}\n".format(isinstance(node, ast.Name)))
-                if isinstance(node, ast.FunctionDef):
-                    args = [a.arg for a in node.args.args]
-                    ast_log.write("\n\t....function args....\n")
-                    for arg in args:
-                        ast_log.write(f"\t{arg}\n")
-                    ast_log.write("\n\t....function args end....\n")
+            elif isinstance(node, ast.FunctionDef):
+                ast_log.write("\n\t....function line number and function name....\n")
+                ast_log.write(f"\t{node.lineno}\n")
+                ast_log.write(f"\t{node.name}\n")
+                ast_log.write("\n\t....end function line number....\n")
+                args = [a.arg for a in node.args.args]
+                ast_log.write("\n\t....function args until the first wrong....\n")
+                for arg in args:
+                    ast_log.write(f"\t{arg}\n")
+                    if not snake_case(arg):
+                        ast_log.write(f"\n\nbad arg!!! {arg}\n\n")
+                        errors.append(filename + S010.format(node.lineno))
+                        break
+                defaults = [d for d in node.args.defaults]
+                for d in defaults:
+                    ast_log.write(f"\n\t....default = {d}....\n")
+                    if isinstance(d, ast.List):
+                        errors.append(filename + S012.format(node.lineno))
+                        break
 
-
-
-
+                ast_log.write("\n\t....function args end....\n")
 
         # AST MODULE END
         #errors.sort()
