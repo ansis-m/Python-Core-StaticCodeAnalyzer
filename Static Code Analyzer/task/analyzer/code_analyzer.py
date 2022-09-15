@@ -81,18 +81,19 @@ def many_spaces_after_construction_name(line):
 
     temp = line.strip()
 
-    match_object = re.match('class ', temp)
-    if re.match(match_object) and re.match('class  ', temp):
+    if re.match('class ', temp) and re.match('class  ', temp):
         return True
-    else:
-        return False
+    if re.match('def ', temp) and re.match('def  ', temp):
+        return True
+
+    return False
 
 
 def bad_class_name(line):
 
     temp = line.strip()
     if re.match('class ', temp):
-        class_name = re.split(":", temp[5::].strip())[0]
+        class_name = re.split(":|\(", temp[5::].strip())[0]
         if not re.match("^([A-Z][a-z0-9]+)+$", class_name):
             return True
 
@@ -100,6 +101,14 @@ def bad_class_name(line):
 
 
 def bad_function_name(line):
+    temp = line.strip()
+    if re.match('def ', temp):
+        function_name = re.split("\(", temp[5::].strip())[0]
+        function_name = function_name.strip("__")
+
+        if not re.match("^[a-z][a-z0-9]+(_[a-z][a-z0-9]+)*$", function_name):
+            return True
+
     return False
 
 
@@ -138,7 +147,7 @@ def check_file(filename):
     with open(filename, "r", encoding="utf-8") as file:
         empty_lines = 0
         for index, line in enumerate(file, start=1):
-            log.write(line)
+            log.write("{}: ".format(index) + line)
             errors = check(line, index, filename)
             if not blank(line):
                 if empty_lines > 2:
